@@ -1,0 +1,25 @@
+# Build outputs
+Debug/
+Release/
+build/
+*.o
+*.d
+*.a
+*.elf
+*.map
+*.lst
+*.hex
+*.bin
+
+# CubeIDE / Eclipse metadata (usually not portable)
+.metadata/
+*.launch
+.settings/
+.project
+.cproject
+
+# OS / editor
+.DS_Store
+*~
+*.swp
+.vscode/

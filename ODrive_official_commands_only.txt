@@ -1,0 +1,63 @@
+ODrive CANSimple official commands only (extracted)
+
+[Project]
+can_test_ide/f446re_temp
+
+========================================
+1) Commands actively used in main control flow
+========================================
+
+1. SET_AXIS_STATE (0x07)
+- Definition:
+  - can_test_ide/f446re_temp/Core/Src/main.c:172
+    #define ODRIVE_CMD_SET_AXIS_STATE 0x07U
+- Send function:
+  - can_test_ide/f446re_temp/Core/Src/main.c:207
+    static void odrive_set_axis_state(Axis *axis, uint32_t axis_state)
+  - can_test_ide/f446re_temp/Core/Src/main.c:211
+    odrive_send_frame(axis, ODRIVE_CMD_SET_AXIS_STATE, payload);
+- Called from:
+  - can_test_ide/f446re_temp/Core/Src/main.c:224
+  - can_test_ide/f446re_temp/Core/Src/main.c:226
+  - can_test_ide/f446re_temp/Core/Src/main.c:228
+  - can_test_ide/f446re_temp/Core/Src/main.c:230
+
+2. SET_INPUT_VEL (0x0D)
+- Definition:
+  - can_test_ide/f446re_temp/Core/Src/main.c:173
+    #define ODRIVE_CMD_SET_INPUT_VEL 0x0DU
+- Send function:
+  - can_test_ide/f446re_temp/Core/Src/main.c:214
+    static void odrive_set_input_vel(Axis *axis, float vel_rev_s, float torque_ff_nm)
+  - can_test_ide/f446re_temp/Core/Src/main.c:219
+    odrive_send_frame(axis, ODRIVE_CMD_SET_INPUT_VEL, payload);
+- Called from:
+  - can_test_ide/f446re_temp/Core/Src/main.c:269
+  - can_test_ide/f446re_temp/Core/Src/main.c:270
+  - can_test_ide/f446re_temp/Core/Src/main.c:271
+  - can_test_ide/f446re_temp/Core/Src/main.c:272
+
+========================================
+2) Official command wrappers present in ODrive library file
+========================================
+
+1. SET_AXIS_STATE (0x07)
+- can_test_ide/f446re_temp/Core/Src/ODrive.c:27
+  void Set_Axis_Requested_State(Axis axis, ODriveAxisState state)
+
+2. SET_INPUT_VEL (0x0D)
+- can_test_ide/f446re_temp/Core/Src/ODrive.c:37
+  void Set_Input_Vel(Axis axis, float velocity, float torque_feedforward)
+
+3. SET_CONTROLLER_MODE (0x0B)
+- can_test_ide/f446re_temp/Core/Src/ODrive.c:47
+  void Set_Controller_Modes(Axis axis, ODriveControlMode control_mode, ODriveInputMode input_mode)
+
+========================================
+3) Command ID enum source (official names)
+========================================
+
+- can_test_ide/f446re_temp/Core/Inc/ODrive.h:13  SET_AXIS_STATE      = 0x07
+- can_test_ide/f446re_temp/Core/Inc/ODrive.h:15  SET_CONTROLLER_MODE = 0x0B
+- can_test_ide/f446re_temp/Core/Inc/ODrive.h:16  SET_INPUT_VEL       = 0x0D
+

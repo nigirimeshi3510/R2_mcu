@@ -1,0 +1,95 @@
+ODrive CAN TX code list
+Generated from current workspace source.
+
+========================================
+1) Active TX path in main.c
+========================================
+
+[File] can_test_ide/f446re_temp/Core/Src/main.c
+
+- CAN ID builder:
+  - line 191: static uint32_t odrive_make_can_id(uint8_t axis_id, uint8_t cmd_id)
+  - line 193: return (((uint32_t)axis_id << 5U) | ((uint32_t)cmd_id & 0x1FU));
+
+- Common ODrive frame sender:
+  - line 196: static void odrive_send_frame(Axis *axis, uint8_t cmd_id, const uint8_t payload[8])
+  - line 198: uint32_t can_id = odrive_make_can_id(axis->AXIS_ID, cmd_id);
+  - line 200: if (axis->CAN_INSTANCE == &hcan1) { sendCAN1(can_id, (uint8_t *)payload); }
+  - line 202: else if (axis->CAN_INSTANCE == &hcan2) { sendCAN2(can_id, (uint8_t *)payload); }
+
+- Axis state command (ODrive cmd 0x07):
+  - line 207: static void odrive_set_axis_state(Axis *axis, uint32_t axis_state)
+  - line 211: odrive_send_frame(axis, ODRIVE_CMD_SET_AXIS_STATE, payload);
+
+- Velocity command (ODrive cmd 0x0D):
+  - line 214: static void odrive_set_input_vel(Axis *axis, float vel_rev_s, float torque_ff_nm)
+  - line 219: odrive_send_frame(axis, ODRIVE_CMD_SET_INPUT_VEL, payload);
+
+- Send closed-loop request to all 4 axes:
+  - line 222: static void odrive_enter_closed_loop_all(void)
+  - line 224: odrive_set_axis_state(&axis1, ODRIVE_AXIS_STATE_CLOSED_LOOP_CTRL);
+  - line 226: odrive_set_axis_state(&axis2, ODRIVE_AXIS_STATE_CLOSED_LOOP_CTRL);
+  - line 228: odrive_set_axis_state(&axis3, ODRIVE_AXIS_STATE_CLOSED_LOOP_CTRL);
+  - line 230: odrive_set_axis_state(&axis4, ODRIVE_AXIS_STATE_CLOSED_LOOP_CTRL);
+
+- Send velocity from PS5 stick to all 4 axes:
+  - line 265: static void odrive_speed_control_from_ps5(void)
+  - line 269: odrive_set_input_vel(&axis1, odrive_target_vel, 0.0f);
+  - line 270: odrive_set_input_vel(&axis2, odrive_target_vel, 0.0f);
+  - line 271: odrive_set_input_vel(&axis3, odrive_target_vel, 0.0f);
+  - line 272: odrive_set_input_vel(&axis4, odrive_target_vel, 0.0f);
+
+- Periodic task where ODrive TX is executed:
+  - line 1173: void StartTask02(void *argument)
+  - line 1181: odrive_enter_closed_loop_all();   // once at startup
+  - line 1184: odrive_speed_control_from_ps5();  // every loop
+
+- Low-level CAN TX wrappers used by ODrive path:
+  - line 390: void sendCAN1(uint32_t id, uint8_t data[])
+  - line 416: void sendCAN2(uint32_t id, uint8_t data[])
+  - line 401/427: TxHeader.StdId = id;
+  - line 403/429: TxHeader.IDE = CAN_ID_STD;
+  - line 404/430: TxHeader.DLC = 8;
+  - line 410/436: HAL_CAN_AddTxMessage(...)
+
+========================================
+2) Additional TX API in ODrive.c (library-style path)
+========================================
+
+[File] can_test_ide/f446re_temp/Core/Src/ODrive.c
+
+- CAN ID builder:
+  - line 17: static uint32_t build_can_id(uint8_t axis_id, uint8_t cmd_id)
+  - line 18: return ((uint32_t)axis_id << 5) | (uint32_t)cmd_id;
+
+- Set_Axis_Requested_State:
+  - line 27: void Set_Axis_Requested_State(Axis axis, ODriveAxisState state)
+  - line 32: uint32_t can_id = build_can_id(axis.AXIS_ID, SET_AXIS_STATE);
+  - line 33: if(axis.CAN_INSTANCE == &hcan1) sendCAN1(can_id, payload, 4);
+  - line 34: if(axis.CAN_INSTANCE == &hcan2) sendCAN2(can_id, payload, 4);
+
+- Set_Input_Vel:
+  - line 37: void Set_Input_Vel(Axis axis, float velocity, float torque_feedforward)
+  - line 42: uint32_t can_id = build_can_id(axis.AXIS_ID, SET_INPUT_VEL);
+  - line 43: if(axis.CAN_INSTANCE == &hcan1) sendCAN1(can_id, payload, 8);
+  - line 44: if(axis.CAN_INSTANCE == &hcan2) sendCAN2(can_id, payload, 8);
+
+- Set_Controller_Modes:
+  - line 47: void Set_Controller_Modes(Axis axis, ODriveControlMode control_mode, ODriveInputMode input_mode)
+  - line 53: uint32_t can_id = build_can_id(axis.AXIS_ID, SET_CONTROLLER_MODE);
+  - line 54: if(axis.CAN_INSTANCE == &hcan1) sendCAN1(can_id, payload, 8);
+  - line 55: if(axis.CAN_INSTANCE == &hcan2) sendCAN2(can_id, payload, 8);
+
+========================================
+3) Command IDs used for TX
+========================================
+
+[File] can_test_ide/f446re_temp/Core/Src/main.c
+- line 172: #define ODRIVE_CMD_SET_AXIS_STATE 0x07U
+- line 173: #define ODRIVE_CMD_SET_INPUT_VEL  0x0DU
+
+[File] can_test_ide/f446re_temp/Core/Inc/ODrive.h
+- line 13: SET_AXIS_STATE      = 0x07
+- line 15: SET_CONTROLLER_MODE = 0x0B
+- line 16: SET_INPUT_VEL       = 0x0D
+
